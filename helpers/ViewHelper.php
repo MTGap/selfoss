@@ -58,15 +58,21 @@ class ViewHelper {
         $ageInMinutes = $ageInSeconds / 60;
         $ageInHours = $ageInMinutes / 60;
         $ageInDays = $ageInHours / 24;
+        $day = (int)$date->format('j');
+        $dayNow = (int)$now->format('j');
         
+        if($day===$dayNow-1)
+            return \F3::get('lang_yesterday');
         if($ageInMinutes<1)
             return \F3::get('lang_seconds',round($ageInSeconds, 0));
         if($ageInHours<1)
             return \F3::get('lang_minutes',round($ageInMinutes, 0));
         if($ageInDays<1)
             return \F3::get('lang_hours',round($ageInHours, 0));
-        
-        //return $datestr;
+        if($ageInDays<4) {
+            $dayOfWeek = strtolower($date->format('l'));
+            return \F3::get('lang_'.$dayOfWeek);
+        }
         return \F3::get('lang_timestamp', $date->getTimestamp());
     }
 }
