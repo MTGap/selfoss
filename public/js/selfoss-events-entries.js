@@ -6,7 +6,7 @@ selfoss.events.entries = function(e) {
     $('.entry, .entry-title').unbind('click');
 
     // show/hide entry
-    var target = selfoss.isMobile() ? '.entry' : '.entry-title';
+    var target = '.entry';
     $(target).click(function() {
         var parent = ((target == '.entry') ? $(this) : $(this).parent());
         
