@@ -18,6 +18,9 @@
     
     <!-- app 'behaviour' when adding link to iDevice springboard -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    
+    <!-- app 'behaviour' when adding link to Android Home  -->
+    <meta name="mobile-web-app-capable" content="yes" />
 
     <!--  RSS Feed -->
     <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="feed" />
@@ -29,7 +32,7 @@
     <?PHP if(\F3::get('use_system_font')!=true) : ?>
         <link rel="stylesheet" href="css/fonts.css" />
     <?PHP endif; ?>
-    <link rel="stylesheet" href="all.css" />
+    <link rel="stylesheet" href="<?PHP echo \helpers\View::getGlobalCssFileName(); ?>" />
 
 </head>
 <body class="
@@ -57,7 +60,8 @@
         data-auto_mark_as_read="<?PHP echo \F3::get('auto_mark_as_read'); ?>"
         data-auto_stream_more="<?PHP echo \F3::get('auto_stream_more'); ?>"
         data-load_images_on_mobile="<?PHP echo \F3::get('load_images_on_mobile'); ?>"
-        data-items_perpage="<?PHP echo \F3::get('items_perpage'); ?>" ></span>
+        data-items_perpage="<?PHP echo \F3::get('items_perpage'); ?>"
+        data-auto_hide_read_on_mobile="<?PHP echo \F3::get('auto_hide_read_on_mobile'); ?>"></span>
 
     <!-- menue open for smartphone -->
     <div id="nav-mobile">
@@ -100,18 +104,18 @@
         </div>
         
         <?PHP if($this->loggedin===true && \F3::get('auth')->enabled()===false) : ?>
-        <div id="nav-refresh" class="nologin"></div>
-        <div id="nav-settings" class="nologin"></div>
+        <div id="nav-refresh" title="<?PHP echo trim(\F3::get('lang_refreshbutton')); ?>" class="nologin"></div>
+        <div id="nav-settings" title="<?PHP echo trim(\F3::get('lang_settingsbutton')); ?>" class="nologin"></div>
         <?PHP endif; ?>
         
         <?PHP if($this->loggedin===true && \F3::get('auth')->enabled()===true) : ?>
-        <div id="nav-refresh"></div>
-        <div id="nav-settings"></div>
-        <div id="nav-logout"></div>
+        <div id="nav-refresh" title="<?PHP echo trim(\F3::get('lang_refreshbutton')); ?>"></div>
+        <div id="nav-settings" title="<?PHP echo trim(\F3::get('lang_settingsbutton')); ?>"></div>
+        <div id="nav-logout" title="<?PHP echo trim(\F3::get('lang_logoutbutton')); ?>"></div>
         <?PHP endif; ?>
         
         <?PHP if($this->loggedin===false) : ?>
-        <div id="nav-login"></div>
+        <div id="nav-login" title="<?PHP echo trim(\F3::get('lang_loginbutton')); ?>"></div>
         <?PHP endif; ?>
         
         <a id="nav-copyright" href="http://selfoss.aditu.de" target="_blank">selfoss <?PHP echo \F3::get('version'); ?></a>
@@ -136,6 +140,6 @@
     <!-- fullscreen popup -->
     <div id="fullscreen-entry"></div>
     
-    <script src="all.js"></script>
+    <script src="<?PHP echo \helpers\View::getGlobalJsFileName(); ?>"></script>
 </body>
 </html>

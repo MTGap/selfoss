@@ -315,6 +315,19 @@ var selfoss = {
                 }
             }
         });
+    },
+
+    /**
+     * show the unread count in the document title
+     * 
+     * @param int unread
+     */
+    setUnreadCount: function(unread) {
+        if(unread>0) {
+            $(document).attr('title', 'selfoss ('+unread+')');
+        } else {
+            $(document).attr('title', 'selfoss');
+        }
     }
 
 };

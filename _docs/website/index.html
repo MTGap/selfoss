@@ -28,7 +28,7 @@
             <li class="documentation">documentation</li>
             <li class="about">about</li>
             <li class="forum"><a href="/forum">forum</a></li>
-            <li class="download"><a href="selfoss-2.11.zip">download</a></li>
+            <li class="download"><a href="selfoss-2.13-SNAPSHOT.zip">download</a></li>
         </ul>
         
         <a id="header-fork" href="https://github.com/SSilence/selfoss"></a>
@@ -37,7 +37,7 @@
         
         <!--<div id="header-just-updated"></div>-->
         
-        <a id="header-download" href="selfoss-2.11.zip"><span>download selfoss 2.11</span></a>
+        <a id="header-download" href="selfoss-2.13-SNAPSHOT.zip"><span>download selfoss 2.13-SNAPSHOT</span></a>
         
         <a id="header-donate" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=LR67F3T9DMSC8"><span>donate</span></a>
         
@@ -157,7 +157,7 @@ db_port=3306</code>
                     <li><b>IMPORTANT: don't delete the "data" folder</b>. Delete all old files and folders excluding the folder "data".</li>
                     <li>Upload all new files and folders excluding the data folder (IMPORTANT: also upload the invisible .htaccess files).</li>
                     <li>Rename your folder /data/icons into /data/favicons</li>
-                    <li>Delete the files /public/all.css and /public/all.js</li>
+                    <li>Delete the files /public/all-v<var>*</var>.css and /public/all-v<var>*</var>.js</li>
                     <li>Clean your browser cache.</li>
                 </ol>
                 
@@ -303,6 +303,10 @@ db_port=3306</code>
                     <tr>
                         <td class="documentation-first-column">load_images_on_mobile</td>
                         <td>set load_images_on_mobile=1 for allowing image lazy loading on mobile devices</td>
+                    </tr>
+                    <tr>
+                        <td class="documentation-first-column">auto_hide_read_on_mobile</td>
+                        <td>hide read articles on mobile devices</td>
                     </tr>
                 </table>
             </div>
