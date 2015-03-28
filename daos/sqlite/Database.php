@@ -35,7 +35,7 @@ class Database {
                 touch($db_file);
             }
             
-            // establish database connection
+            \F3::get('logger')->log("Establish database connection", \DEBUG);
             \F3::set('db', new \DB\SQL(
                     'sqlite:' . $db_file
                 )
@@ -92,6 +92,7 @@ class Database {
                         tags        TEXT,
                         spout       TEXT NOT NULL,
                         params      TEXT NOT NULL,
+                        filter      TEXT,
                         error       TEXT,
                         lastupdate  INTEGER
                     );
@@ -108,7 +109,7 @@ class Database {
                 ');
                 
                 \F3::get('db')->exec('
-                    INSERT INTO version (version) VALUES (5);
+                    INSERT INTO version (version) VALUES (7);
                 ');
                 
                 \F3::get('db')->exec('
@@ -170,10 +171,18 @@ class Database {
                         INSERT INTO version (version) VALUES (5);
                     ');
                 }
+                if(strnatcmp($version, "6") < 0){
+                    \F3::get('db')->exec('
+                        ALTER TABLE sources ADD filter TEXT;
+                    ');
+                    \F3::get('db')->exec('
+                        INSERT INTO version (version) VALUES (6);
+                    ');
+                }
             }
             
             // just initialize once
-            $initialized = true;
+            self::$initialized = true;
         }
     }
     

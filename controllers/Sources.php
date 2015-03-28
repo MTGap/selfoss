@@ -19,12 +19,12 @@ class Sources extends BaseController {
      * @return void
      */
     public function show() {
+        $this->needsLoggedIn();
+
         // get available spouts
         $spoutLoader = new \helpers\SpoutLoader();
         $this->view->spouts = $spoutLoader->all();
 
-        $itemDao = new \daos\Items();
-        
         // load sources
         $sourcesDao = new \daos\Sources();
         echo '<div class="source-add">' . \F3::get('lang_source_add') . '</div>' .
@@ -33,9 +33,8 @@ class Sources extends BaseController {
         $sourcesHtml = '</a>';
         $i=0;
         
-        foreach($sourcesDao->get() as $source) {
+        foreach($sourcesDao->getWithIcon() as $source) {
             $this->view->source = $source;
-            $this->view->source['icon'] = $itemDao->getLastIcon($source['id']);
             $sourcesHtml .= $this->view->render('templates/source.phtml');
         }
         
@@ -50,6 +49,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function add() {
+        $this->needsLoggedIn();
+
         $spoutLoader = new \helpers\SpoutLoader();
         $this->view->spouts = $spoutLoader->all();
         echo $this->view->render('templates/source.phtml');
@@ -63,6 +64,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function params() {
+        $this->needsLoggedIn();
+
         if(!isset($_GET['spout']))
             $this->view->error('no spout type given');
         
@@ -91,7 +94,7 @@ class Sources extends BaseController {
         foreach($sources as $source) {
             $this->view->source = $source['title'];
             $this->view->sourceid = $source['id'];
-            $this->view->unread = $itemsDao->numberOfUnreadForSource($source['id']);
+            $this->view->unread = $source['unread'];
             $html .= $this->view->render('templates/source-nav.phtml');
         }
         
@@ -108,7 +111,7 @@ class Sources extends BaseController {
      */
     public function sourcesListAsString() {
         $sourcesDao = new \daos\Sources();
-        $sources = $sourcesDao->get();
+        $sources = $sourcesDao->getWithUnread();
         return $this->renderSources($sources);
     }
     
@@ -120,6 +123,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function write() {
+        $this->needsLoggedIn();
+
         $sourcesDao = new \daos\Sources();
 
         // read data
@@ -134,10 +139,12 @@ class Sources extends BaseController {
         $title = htmlspecialchars($data['title']);
         $tags = htmlspecialchars($data['tags']);
         $spout = $data['spout'];
+        $filter = $data['filter'];
         $isAjax = isset($data['ajax']);
         
         unset($data['title']);
         unset($data['spout']);
+        unset($data['filter']);
         unset($data['tags']);
         unset($data['ajax']);
 
@@ -151,9 +158,9 @@ class Sources extends BaseController {
         $id = \F3::get('PARAMS["id"]');
         
         if (!$sourcesDao->isValid('id', $id))
-            $id = $sourcesDao->add($title, $tags, $spout, $data);
+            $id = $sourcesDao->add($title, $tags, $filter, $spout, $data);
         else
-            $sourcesDao->edit($id, $title, $tags, $spout, $data);
+            $sourcesDao->edit($id, $title, $tags, $filter, $spout, $data);
         
         // autocolor tags
         $tagsDao = new \daos\Tags();
@@ -191,6 +198,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function remove() {
+        $this->needsLoggedIn();
+
         $id = \F3::get('PARAMS["id"]');
 
         $sourceDao = new \daos\Sources();
@@ -218,15 +227,14 @@ class Sources extends BaseController {
      * @return void
      */
     public function listSources() {
-        $itemDao = new \daos\Items();
-        
+        $this->needsLoggedIn();
+
         // load sources
         $sourcesDao = new \daos\Sources();
-        $sources = $sourcesDao->get();
+        $sources = $sourcesDao->getWithIcon();
         
         // get last icon
         for($i=0; $i<count($sources); $i++) {
-            $sources[$i]['icon'] = $itemDao->getLastIcon($sources[$i]['id']);
             $sources[$i]['params'] = json_decode(html_entity_decode($sources[$i]['params']), true);
             $sources[$i]['error'] = $sources[$i]['error']==null ? '' : $sources[$i]['error'];
             unset($sources[$i]['spout_obj']);
@@ -243,6 +251,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function spouts() {
+        $this->needsLoggedIn();
+
         $spoutLoader = new \helpers\SpoutLoader();
         $spouts = $spoutLoader->all();
         $this->view->jsonSuccess($spouts);
@@ -256,22 +266,14 @@ class Sources extends BaseController {
      * @return void
      */
     public function stats() {
+        $this->needsLoggedInOrPublicMode();
+
         $itemDao = new \daos\Items();
         
         // load sources
         $sourcesDao = new \daos\Sources();
-        $sources = $sourcesDao->get();
+        $sources = $sourcesDao->getWithUnread();
         
-        // get stats
-        $result = array();
-        for($i=0; $i<count($sources); $i++) {
-            $result[] = array(
-                'id'     => $sources[$i]['id'],
-                'title'  => $sources[$i]['title'],
-                'unread' => $itemDao->numberOfUnreadForSource($sources[$i]['id'])
-            );
-        }
-        
-        $this->view->jsonSuccess($result);
+        $this->view->jsonSuccess($sources);
     }
 }

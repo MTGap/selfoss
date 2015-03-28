@@ -58,6 +58,11 @@ class ContentLoader {
      */
     public function fetch($source) {
         
+        // at least 20 seconds wait until next update of a given source
+        $this->updateSource($source);
+        if(time() - $source['lastupdate'] < 20)
+            return;
+        
         @set_time_limit(5000);
         @error_reporting(E_ERROR);
         
@@ -136,13 +141,22 @@ class ContentLoader {
             }
 
             // sanitize title
-            $title = $this->sanitizeContent($item->getTitle());
+            $title = $this->sanitizeField($item->getTitle());
             if(strlen(trim($title))==0)
                 $title = "[" . \F3::get('lang_no_title') . "]";
 
+            // Check sanatized title against filter
+            try {
+                if($this->filter($source, $title,$content)===false)
+                    continue;
+            } catch(Exception $e) {
+                $messagesModel->add($feed, 'filter error');
+                continue;
+            }
+
+
             // sanitize author
-            $author = htmlspecialchars_decode($item->getAuthor());
-            $author = htmLawed($author, array("deny_attribute" => "*", "elements" => "-*"));
+            $author = $this->sanitizeField($item->getAuthor());
 
             \F3::get('logger')->log('item content sanitized', \DEBUG);
 
@@ -186,6 +200,26 @@ class ContentLoader {
         $this->updateSource($source);
     }
 
+    /**
+     * Check if a new item matches the filter
+     *
+     * @param $feed object and new item to add
+     * @return boolean indicating filter success
+     */
+    protected function filter($source, $title,$content) {
+        if(strlen(trim($source['filter']))!=0) {
+            $resultTitle = @preg_match($source['filter'], $title);
+            $resultContent = @preg_match($source['filter'], $content);
+            if($resultTitle===false || $resultContent===false) {
+                \F3::get('logger')->log('filter error: ' . $source->fiter, \ERROR);
+                throw new Exception();
+            }
+            // test filter
+            if($resultTitle==0 && $resultContent==0)
+                return false;
+        }
+        return true;
+    }
 
     /**
      * Sanitize content for preventing XSS attacks.
@@ -195,18 +229,33 @@ class ContentLoader {
      */
     protected function sanitizeContent($content) {
         return htmLawed(
-            htmlspecialchars_decode($content),
+            $content,
             array(
                 "safe"           => 1,
-                "deny_attribute" => '* -alt -title -src -href -target',
+                "deny_attribute" => '* -alt -title -src -href -target -width -height, img +width +height',
                 "keep_bad"       => 0,
                 "comment"        => 1,
                 "cdata"          => 1,
-                "elements"       => 'div,p,ul,li,a,img,dl,dt,dd,h1,h2,h3,h4,h5,h6,ol,br,table,tr,td,blockquote,pre,ins,del,th,thead,tbody,b,i,strong,em,tt,sub,sup'
+                "elements"       => 'div,p,ul,li,a,img,dl,dt,dd,h1,h2,h3,h4,h5,h6,ol,br,table,tr,td,blockquote,pre,ins,del,th,thead,tbody,b,i,strong,em,tt,sub,sup,s,code'
             )
         );
     }
 
+    /**
+     * Sanitize a simple field
+     *
+     * @param $value content of the given field
+     * @return mixed|string sanitized content
+     */
+    protected function sanitizeField($value) {
+        return htmLawed(
+            htmlspecialchars_decode($value),
+            array(
+                "deny_attribute" => '* -href -title',
+                "elements"       => 'a,br,ins,del,b,i,strong,em,tt,sub,sup,s,code'
+            )
+        );
+    }
 
     /**
      * Fetch the thumbanil of a given item
@@ -251,7 +300,7 @@ class ContentLoader {
                 $newItem['icon'] = md5($lasticon) . '.png';
             } else {
                 $imageHelper = new \helpers\Image();
-                $iconAsPng = $imageHelper->loadImage($icon, 30, 30);
+                $iconAsPng = $imageHelper->loadImage($icon, 30, null);
                 if($iconAsPng!==false) {
                     file_put_contents(
                         'data/favicons/' . md5($icon) . '.png',
@@ -333,7 +382,7 @@ class ContentLoader {
      */
     protected function updateSource($source) {
         // remove previous error
-        if (strlen(trim($source['error'])) != 0) {
+        if ( !is_null($source['error']) ) {
             $this->sourceDao->error($source['id'], '');
         }
         // save last update

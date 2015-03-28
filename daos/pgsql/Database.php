@@ -35,7 +35,7 @@ class Database {
      */
     public function __construct() {
         if (self::$initialized === false && \F3::get('db_type')=="pgsql") {
-            // establish database connection
+            \F3::get('logger')->log("Establish database connection", \DEBUG);
             \F3::set('db', new \DB\SQL(
                 'pgsql:host=' . \F3::get('db_host') . ';port=' . \F3::get('db_port') . ';dbname='.\F3::get('db_database'),
                 \F3::get('db_username'),
@@ -95,6 +95,7 @@ class Database {
                         id          SERIAL PRIMARY KEY,
                         title       TEXT NOT NULL,
                         tags        TEXT,
+                        filter      TEXT,
                         spout       TEXT NOT NULL,
                         params      TEXT NOT NULL,
                         error       TEXT,
@@ -174,10 +175,16 @@ class Database {
                         INSERT INTO version (version) VALUES (5);
                     ');
                 }
+                if(strnatcmp($version, "6") < 0){
+                    \F3::get('db')->exec(array(
+                        'ALTER TABLE sources ADD filter TEXT;',
+                        'INSERT INTO version (version) VALUES (6);'
+                    ));
+                }
             }
             
             // just initialize once
-            $initialized = true;
+            self::$initialized = true;
         }
     }
     

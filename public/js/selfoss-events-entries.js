@@ -96,10 +96,8 @@ selfoss.events.entries = function(e) {
                 // setup fancyBox image viewer
                 selfoss.setupFancyBox(content, parent.attr('id').substr(5));
 
-                // turn of column view if entry is too long
-                if(content.height() > $(window).height() ) {
-                    content.addClass('entry-content-nocolumns');
-                }
+                // scroll to article header
+                parent.get(0).scrollIntoView();
             }
             
             // load images not on mobile devices
@@ -151,7 +149,8 @@ selfoss.events.entries = function(e) {
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 streamMore.removeClass('loading');
-                selfoss.showError('Load more error: '+errorThrown);
+                selfoss.showError('Load more error: '+
+                                  textStatus+' '+errorThrown);
             }
         });
     });

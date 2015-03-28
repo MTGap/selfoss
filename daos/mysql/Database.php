@@ -28,7 +28,7 @@ class Database {
      */
     public function __construct() {
         if(self::$initialized===false && \F3::get('db_type')=="mysql") {
-            // establish database connection
+            \F3::get('logger')->log("Establish database connection", \DEBUG);
             \F3::set('db', new \DB\SQL(
                 'mysql:host=' . \F3::get('db_host') . ';port=' . \F3::get('db_port') . ';dbname='.\F3::get('db_database'),
                 \F3::get('db_username'),
@@ -86,6 +86,7 @@ class Database {
                         tags TEXT,
                         spout TEXT NOT NULL ,
                         params TEXT NOT NULL ,
+                        filter TEXT,
                         error TEXT,
                         lastupdate INT
                     ) ENGINE = MYISAM DEFAULT CHARSET=utf8;
@@ -102,7 +103,7 @@ class Database {
                 ');
                 
                 \F3::get('db')->exec('
-                    INSERT INTO '.\F3::get('db_prefix').'version (version) VALUES (5);
+                    INSERT INTO '.\F3::get('db_prefix').'version (version) VALUES (6);
                 ');
                 
                 \F3::get('db')->exec('
@@ -160,11 +161,22 @@ class Database {
                         INSERT INTO '.\F3::get('db_prefix').'version (version) VALUES (5);
                     ');
                 }
+                if(strnatcmp($version, "6") < 0){
+                    \F3::get('db')->exec('
+                        ALTER TABLE '.\F3::get('db_prefix').'sources ADD filter TEXT;
+                    ');
+                    \F3::get('db')->exec('
+                        INSERT INTO '.\F3::get('db_prefix').'version (version) VALUES (6);
+                    ');
+                }
             }
             
             // just initialize once
-            $initialized = true;
+            self::$initialized = true;
         }
+
+        $class = 'daos\\' . \F3::get('db_type') . '\\Statements';
+        $this->stmt = new $class();
     }
     
     
