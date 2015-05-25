@@ -145,15 +145,9 @@ class ContentLoader {
             if(strlen(trim($title))==0)
                 $title = "[" . \F3::get('lang_no_title') . "]";
 
-            // Check sanatized title against filter
-            try {
-                if($this->filter($source, $title,$content)===false)
-                    continue;
-            } catch(Exception $e) {
-                $messagesModel->add($feed, 'filter error');
+            // Check sanitized title against filter
+            if($this->filter($source, $title, $content)===false)
                 continue;
-            }
-
 
             // sanitize author
             $author = $this->sanitizeField($item->getAuthor());
@@ -163,6 +157,7 @@ class ContentLoader {
             try {
                 $icon = $item->getIcon();
             } catch(\exception $e) {
+                \F3::get('logger')->log('icon: error ' . $e->getMessage(), \DEBUG);
                 return;
             }
 
@@ -211,8 +206,8 @@ class ContentLoader {
             $resultTitle = @preg_match($source['filter'], $title);
             $resultContent = @preg_match($source['filter'], $content);
             if($resultTitle===false || $resultContent===false) {
-                \F3::get('logger')->log('filter error: ' . $source->fiter, \ERROR);
-                throw new Exception();
+               \F3::get('logger')->log('filter error: ' . $source['filter'], \ERROR);
+                return true; // do not filter out item
             }
             // test filter
             if($resultTitle==0 && $resultContent==0)
@@ -251,7 +246,7 @@ class ContentLoader {
         return htmLawed(
             htmlspecialchars_decode($value),
             array(
-                "deny_attribute" => '* -href -title',
+                "deny_attribute" => '* -href -title -target',
                 "elements"       => 'a,br,ins,del,b,i,strong,em,tt,sub,sup,s,code'
             )
         );
@@ -266,14 +261,15 @@ class ContentLoader {
      */
     protected function fetchThumbnail($thumbnail, $newItem) {
         if (strlen(trim($thumbnail)) > 0) {
+            $extension = 'jpg';
             $imageHelper = new \helpers\Image();
-            $thumbnailAsPng = $imageHelper->loadImage($thumbnail, 500, 500);
-            if ($thumbnailAsPng !== false) {
+            $thumbnailAsJpg = $imageHelper->loadImage($thumbnail, $extension, 500, 500);
+            if ($thumbnailAsJpg !== false) {
                 file_put_contents(
-                    'data/thumbnails/' . md5($thumbnail) . '.png',
-                    $thumbnailAsPng
+                    'data/thumbnails/' . md5($thumbnail) . '.' . $extension,
+                    $thumbnailAsJpg
                 );
-                $newItem['thumbnail'] = md5($thumbnail) . '.png';
+                $newItem['thumbnail'] = md5($thumbnail) . '.' . $extension;
                 \F3::get('logger')->log('thumbnail generated: ' . $thumbnail, \DEBUG);
             } else {
                 $newItem['thumbnail'] = '';
@@ -295,18 +291,19 @@ class ContentLoader {
      */
     protected function fetchIcon($icon, $newItem, &$lasticon) {
         if(strlen(trim($icon)) > 0) {
+            $extension = 'png';
             if($icon==$lasticon) {
                 \F3::get('logger')->log('use last icon: '.$lasticon, \DEBUG);
-                $newItem['icon'] = md5($lasticon) . '.png';
+                $newItem['icon'] = md5($lasticon) . '.' . $extension;
             } else {
                 $imageHelper = new \helpers\Image();
-                $iconAsPng = $imageHelper->loadImage($icon, 30, null);
+                $iconAsPng = $imageHelper->loadImage($icon, $extension, 30, null);
                 if($iconAsPng!==false) {
                     file_put_contents(
-                        'data/favicons/' . md5($icon) . '.png',
+                        'data/favicons/' . md5($icon) . '.' . $extension,
                         $iconAsPng
                     );
-                    $newItem['icon'] = md5($icon) . '.png';
+                    $newItem['icon'] = md5($icon) . '.' . $extension;
                     $lasticon = $icon;
                     \F3::get('logger')->log('icon generated: '.$icon, \DEBUG);
                 } else {

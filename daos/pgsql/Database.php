@@ -114,7 +114,7 @@ class Database {
                 ');
                 
                 \F3::get('db')->exec('
-                    INSERT INTO version (version) VALUES (5);
+                    INSERT INTO version (version) VALUES (6);
                 ');
                 
                 \F3::get('db')->exec('
@@ -201,10 +201,6 @@ class Database {
      * @return  void
      */
     public function optimize() {
-        $result = @\F3::get('db')->exec("SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
-        $tables = array();
-        foreach($result as $table)
-            foreach($table as $key=>$value)
-                @\F3::get('db')->exec("VACUUM ANALYZE " . $value);
+        \F3::get('db')->exec("VACUUM ANALYZE");
     }
 }
